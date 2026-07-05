@@ -1,5 +1,6 @@
 package com.merging.chunks.service;
 
+import com.merging.chunks.dto.CompletedChunks;
 import com.merging.chunks.dto.UploadIdsDTO;
 import com.merging.chunks.enums.ChunkStatus;
 import com.merging.chunks.enums.STATUS;
@@ -23,10 +24,7 @@ import software.amazon.awssdk.services.s3.presigner.model.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -268,5 +266,31 @@ public class S3MultipartService {
             System.out.println("UNABLE TO FETCH FILES"+ " : " +e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+//    Check for unfinished[STATUS=> UPLOADS.PROCESSING] uploads
+    public ResponseEntity<?> getUnfinishedFileUpload() {
+        List<CompletedChunks> inProgressFiles = new ArrayList<>();
+        List<Uploads> processingUploads = uploadsRepo.getAllByStatus(STATUS.PROCESSING);
+
+        for (Uploads uploadedPart : processingUploads) {
+            ListPartsResponse uploadedChunks = s3Client.listParts(ListPartsRequest.builder()
+                    .bucket(bucket)
+                    .key(uploadedPart.getFileName())
+                    .uploadId(uploadedPart.getUploadId())
+                    .build());
+            List<Integer> parts = uploadedChunks.parts().stream().map(Part::partNumber).toList();
+
+            CompletedChunks processingFiles = new CompletedChunks();
+                    processingFiles.setCompletedPart(parts);
+                    processingFiles.setFileSize(uploadedPart.getFileSize());
+                    processingFiles.setUploadId(uploadedPart.getUploadId());
+                    processingFiles.setFileName(uploadedPart.getFileName());
+            inProgressFiles.add(processingFiles);
+        }
+
+        if (processingUploads.isEmpty()) return ResponseEntity.ok(Collections.EMPTY_LIST);
+
+        return ResponseEntity.ok().body(inProgressFiles);
     }
 }

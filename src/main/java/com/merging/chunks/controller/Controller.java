@@ -115,6 +115,11 @@ public class Controller {
         System.out.println("FOLDER -> "+folder);
        return s3MultipartService.listObject(folder);
     }
+
+    @GetMapping("unfinishedUpload")
+    public ResponseEntity<?> getUnfinishedFileUpload() {
+        return s3MultipartService.getUnfinishedFileUpload();
+    }
 }
 
 
