@@ -293,4 +293,21 @@ public class S3MultipartService {
 
         return ResponseEntity.ok().body(inProgressFiles);
     }
+
+//    Upload Transcoding to s3
+    public ResponseEntity<?> uploadSegment(MultipartFile file) throws IOException {
+        try {
+            PutObjectResponse putObjectResponse = s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(file.getOriginalFilename())
+                            .build() ,
+                    RequestBody.fromBytes(file.getBytes())
+            );
+            return ResponseEntity.ok("segment uploaded");
+        } catch (S3Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 }

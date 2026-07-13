@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 @RestController
 public class Controller {
@@ -119,6 +120,12 @@ public class Controller {
     @GetMapping("unfinishedUpload")
     public ResponseEntity<?> getUnfinishedFileUpload() {
         return s3MultipartService.getUnfinishedFileUpload();
+    }
+
+    @PutMapping("/upload-transcodesegment")
+    public ResponseEntity<?> uploadTranscodedSegment(@RequestParam("file") MultipartFile file) throws IOException {
+        System.out.println(file.getOriginalFilename()+" getOriginalFilename()");
+        return s3MultipartService.uploadSegment(file);
     }
 }
 
