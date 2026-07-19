@@ -124,8 +124,16 @@ public class Controller {
 
     @PutMapping("/upload-transcodesegment")
     public ResponseEntity<?> uploadTranscodedSegment(@RequestParam("file") MultipartFile file) throws IOException {
-        System.out.println(file.getOriginalFilename()+" getOriginalFilename()");
         return s3MultipartService.uploadSegment(file);
+    }
+
+    @PostMapping("save-metadata")
+    public ResponseEntity<?> syncMetadata(@RequestParam("thumbnail") MultipartFile thumbnail,
+                                          @RequestParam("metadata") MultipartFile metadata,
+                                          @RequestParam("key") String key,
+                                          @RequestParam("title") String title,
+                                          @RequestParam("description") String description) throws IOException {
+        return s3MultipartService.synctodb(thumbnail, metadata, key, title, description);
     }
 }
 

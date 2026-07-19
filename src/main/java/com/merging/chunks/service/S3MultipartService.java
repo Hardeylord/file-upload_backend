@@ -1,14 +1,19 @@
 package com.merging.chunks.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merging.chunks.dto.CompletedChunks;
 import com.merging.chunks.dto.UploadIdsDTO;
 import com.merging.chunks.enums.ChunkStatus;
 import com.merging.chunks.enums.STATUS;
+import com.merging.chunks.metadataDTO.Metadata;
+import com.merging.chunks.metadataDTO.Variants;
 import com.merging.chunks.model.Chunks;
 import com.merging.chunks.model.Uploads;
+import com.merging.chunks.model.Video;
 import com.merging.chunks.repo.ChunksRepo;
 import com.merging.chunks.repo.UploadsRepo;
-import lombok.AllArgsConstructor;
+import com.merging.chunks.repo.VideoRepo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +26,11 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class S3MultipartService {
@@ -39,13 +44,15 @@ public class S3MultipartService {
     private final S3Presigner s3Presigner;
     private final ChunksRepo chunksRepo;
     private final UploadsRepo uploadsRepo;
+    private final VideoRepo videoRepo;
     private final ApplicationEventPublisher publisher;
 
-    public S3MultipartService(S3Client s3Client, S3Presigner s3Presigner, ChunksRepo chunksRepo, UploadsRepo uploadsRepo, ApplicationEventPublisher publisher) {
+    public S3MultipartService(S3Client s3Client, S3Presigner s3Presigner, ChunksRepo chunksRepo, UploadsRepo uploadsRepo, VideoRepo videoRepo, ApplicationEventPublisher publisher) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.chunksRepo = chunksRepo;
         this.uploadsRepo = uploadsRepo;
+        this.videoRepo = videoRepo;
         this.publisher = publisher;
     }
 
@@ -309,5 +316,41 @@ public class S3MultipartService {
             throw new RuntimeException(e);
         }
 
+    }
+
+//    sync meta-data to db
+    public ResponseEntity<?> synctodb(MultipartFile thumbnail, MultipartFile metadata, String key, String title, String description) throws IOException {
+        Metadata metadata1 = extractMetadata(metadata);
+        List<String> variants = metadata1.getHls().getVariants().stream().map(Variants::getLabel).toList();
+
+        Video videoMetadata = Video.builder()
+                .duration(metadata1.getVideo().getDurationSeconds())
+                .filename(metadata1.getFile().getOriginalName())
+                .title(title)
+                .description(description)
+                .masterplaylist(metadata1.getFile().getName()+"/"+metadata1.getHls().getMasterPlaylist())
+                .resolutions(variants)
+                .sizeMB(metadata1.getFile().getSizeMB())
+                .thumbnail(thumbnail.getName())
+                .build();
+        videoRepo.save(videoMetadata);
+        try {
+                PutObjectResponse putObjectResponse = s3Client.putObject(
+                        PutObjectRequest.builder()
+                                .bucket(bucket)
+                                .key(key)
+                                .build(),
+                        RequestBody.fromBytes(thumbnail.getBytes())
+                );
+                return ResponseEntity.ok("Successfully synced meta-data to db");
+            } catch (S3Exception | IOException e) {
+                throw new RuntimeException(e);
+            }
+    }
+
+   Metadata extractMetadata(MultipartFile metadata) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+       objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper.readValue(metadata.getInputStream(), Metadata.class);
     }
 }
