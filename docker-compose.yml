@@ -1,0 +1,26 @@
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/uploads
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+
+  database:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+       POSTGRES_DB : uploads
+       POSTGRES_PASSWORD : 1234
+       POSTGRES_USER : postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
@@ -25,6 +24,7 @@ public class UploadPartListener {
     private final ChunksRepo chunksRepo;
     private final S3Client s3Client;
     private final UploadsRepo uploadsRepo;
+
     @Value("${vne.s3Config.bucket.name}")
     private String bucket;
 

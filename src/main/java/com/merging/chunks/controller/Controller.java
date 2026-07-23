@@ -113,7 +113,7 @@ public class Controller {
 
     @GetMapping("/files")
     public ResponseEntity<?> getFiles(@RequestParam(required = false) String folder) {
-        System.out.println("FOLDER -> "+folder);
+//        System.out.println("FOLDER -> "+folder);
        return s3MultipartService.listObject(folder);
     }
 

@@ -37,7 +37,8 @@ public class S3MultipartService {
 
     @Value("${vne.s3Config.bucket.name}")
     private String bucket;
-
+    @Value("${vne.s3Config.CLOUDFRONT.url}")
+    private String CLOUD_FRONT_URL;
     String filePath= "etub/";
 
     private final S3Client s3Client;
@@ -322,7 +323,7 @@ public class S3MultipartService {
     public ResponseEntity<?> synctodb(MultipartFile thumbnail, MultipartFile metadata, String key, String title, String description) throws IOException {
         Metadata metadata1 = extractMetadata(metadata);
         List<String> variants = metadata1.getHls().getVariants().stream().map(Variants::getLabel).toList();
-
+        if (key == null) key = metadata1.getFile().getName()+"/";
         Video videoMetadata = Video.builder()
                 .duration(metadata1.getVideo().getDurationSeconds())
                 .filename(metadata1.getFile().getOriginalName())
@@ -331,14 +332,14 @@ public class S3MultipartService {
                 .masterplaylist(metadata1.getFile().getName()+"/"+metadata1.getHls().getMasterPlaylist())
                 .resolutions(variants)
                 .sizeMB(metadata1.getFile().getSizeMB())
-                .thumbnail(thumbnail.getName())
+                .thumbnail(CLOUD_FRONT_URL + key + thumbnail.getOriginalFilename())
                 .build();
         videoRepo.save(videoMetadata);
         try {
                 PutObjectResponse putObjectResponse = s3Client.putObject(
                         PutObjectRequest.builder()
                                 .bucket(bucket)
-                                .key(key)
+                                .key(key+thumbnail.getOriginalFilename())
                                 .build(),
                         RequestBody.fromBytes(thumbnail.getBytes())
                 );
