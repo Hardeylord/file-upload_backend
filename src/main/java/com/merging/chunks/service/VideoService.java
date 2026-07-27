@@ -11,10 +11,8 @@ import java.util.List;
 
 @Service
 public class VideoService {
-    @Value("${vne.s3Config.base.url}")
-    private String baseUrl;
-    @Value("${vne.s3Config.CLOUDFRONT.url}")
-    private String CLOUD_FRONT_URL;
+
+    private final String CLOUD_FRONT_URL = System.getenv("AWS_CLOUDFRONT_URL");
 
     private final VideoRepo videoRepo;
 

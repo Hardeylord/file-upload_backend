@@ -12,10 +12,8 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Configuration
 public class S3Config {
 
-    @Value("${vne.s3Config.access.key.id}")
-    private String accessKey;
-    @Value("${vne.s3Config.secret.key.access}")
-    private String secretKey;
+    private final String accessKey = System.getenv("ACCESS_KEYID");
+    private final String secretKey = System.getenv("SECRETKEY_ACCESS");
 
     @Bean
     public S3Client s3Client() {

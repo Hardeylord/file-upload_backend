@@ -35,10 +35,8 @@ import java.util.*;
 @Service
 public class S3MultipartService {
 
-    @Value("${vne.s3Config.bucket.name}")
-    private String bucket;
-    @Value("${vne.s3Config.CLOUDFRONT.url}")
-    private String CLOUD_FRONT_URL;
+    private final String bucket = System.getenv("AWS_BUCKET");
+    private final String CLOUD_FRONT_URL = System.getenv("AWS_CLOUDFRONT_URL");
     String filePath= "etub/";
 
     private final S3Client s3Client;

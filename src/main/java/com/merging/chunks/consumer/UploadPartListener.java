@@ -25,8 +25,7 @@ public class UploadPartListener {
     private final S3Client s3Client;
     private final UploadsRepo uploadsRepo;
 
-    @Value("${vne.s3Config.bucket.name}")
-    private String bucket;
+    private final String bucket = System.getenv("AWS_BUCKET");
 
     public UploadPartListener(ChunksRepo chunksRepo, S3Client s3Client, UploadsRepo uploadsRepo) {
         this.chunksRepo = chunksRepo;
