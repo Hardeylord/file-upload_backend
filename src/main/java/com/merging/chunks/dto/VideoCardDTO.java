@@ -4,17 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class VideoResponse {
+public class VideoCardDTO {
     private String id;
     private String title;
-    private String description;
-    private List<String> categories;
-    private String stramUrl;
+    private String thumbnail;
     private double duration;
-    private List<String> resolutions;
 }

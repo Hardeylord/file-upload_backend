@@ -1,5 +1,6 @@
 package com.merging.chunks.controller;
 
+import com.merging.chunks.dto.VideoCardDTO;
 import com.merging.chunks.dto.VideoResponse;
 import com.merging.chunks.model.Video;
 import com.merging.chunks.service.VideoService;
@@ -21,12 +22,17 @@ public class VideoController {
     }
 
     @GetMapping("/videos")
-    public ResponseEntity<List<Video>> videos () {
+    public ResponseEntity<List<VideoCardDTO>> videos () {
         return videoService.getAllVideos();
     }
 
     @GetMapping("/video/{id}")
     public ResponseEntity<VideoResponse> video (@PathVariable String id) {
         return ResponseEntity.ok(videoService.videoStream(id));
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<?> categories () {
+        return ResponseEntity.ok("OK");
     }
 }

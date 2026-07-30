@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 public class Controller {
@@ -131,9 +132,10 @@ public class Controller {
     public ResponseEntity<?> syncMetadata(@RequestParam("thumbnail") MultipartFile thumbnail,
                                           @RequestParam("metadata") MultipartFile metadata,
                                           @RequestParam("key") String key,
+                                          @RequestParam("categories") List<String> categories,
                                           @RequestParam("title") String title,
                                           @RequestParam("description") String description) throws IOException {
-        return s3MultipartService.synctodb(thumbnail, metadata, key, title, description);
+        return s3MultipartService.synctodb(thumbnail, metadata, key, title, description, categories);
     }
 }
 

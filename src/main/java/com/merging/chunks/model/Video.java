@@ -22,7 +22,7 @@ public class Video {
     private String id;
     @Column(name = "title")
     private String title;
-    @Column(name = "dscription")
+    @Column(name = "description")
     private String description;
     @Column(name = "filename")
     private String filename;
@@ -39,4 +39,6 @@ public class Video {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "resolutions", columnDefinition = "jsonb")
     private List<String> resolutions;
+    @Column(name = "categories")
+    private List<String> categories;
 }

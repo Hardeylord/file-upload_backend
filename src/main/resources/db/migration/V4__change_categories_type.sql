@@ -1,0 +1,6 @@
+ALTER TABLE video
+DROP COLUMN categories;
+
+ALTER TABLE video
+ADD COLUMN categories TEXT[] NOT NULL DEFAULT ARRAY['AI'];
+

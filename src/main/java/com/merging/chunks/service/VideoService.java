@@ -1,5 +1,6 @@
 package com.merging.chunks.service;
 
+import com.merging.chunks.dto.VideoCardDTO;
 import com.merging.chunks.dto.VideoResponse;
 import com.merging.chunks.model.Video;
 import com.merging.chunks.repo.VideoRepo;
@@ -20,10 +21,10 @@ public class VideoService {
         this.videoRepo = videoRepo;
     }
 
-    public ResponseEntity<List<Video>> getAllVideos () {
+    public ResponseEntity<List<VideoCardDTO>> getAllVideos () {
         List<Video> videos = videoRepo.findAll();
-
-        return ResponseEntity.ok(videos);
+        List<VideoCardDTO> allVideos = videoRepo.getAllVideos();
+        return ResponseEntity.ok(allVideos);
     }
 
     public VideoResponse videoStream(String id) {
@@ -32,6 +33,7 @@ public class VideoService {
                 video.getId(),
                 video.getTitle(),
                 video.getDescription(),
+                video.getCategories(),
                 CLOUD_FRONT_URL + video.getMasterplaylist(),
                 video.getDuration(),
                 video.getResolutions()

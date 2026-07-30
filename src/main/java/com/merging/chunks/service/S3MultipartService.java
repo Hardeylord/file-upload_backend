@@ -318,7 +318,7 @@ public class S3MultipartService {
     }
 
 //    sync meta-data to db
-    public ResponseEntity<?> synctodb(MultipartFile thumbnail, MultipartFile metadata, String key, String title, String description) throws IOException {
+    public ResponseEntity<?> synctodb(MultipartFile thumbnail, MultipartFile metadata, String key, String title, String description, List<String> categories) throws IOException {
         Metadata metadata1 = extractMetadata(metadata);
         List<String> variants = metadata1.getHls().getVariants().stream().map(Variants::getLabel).toList();
         if (key == null) key = metadata1.getFile().getName()+"/";
@@ -326,6 +326,7 @@ public class S3MultipartService {
                 .duration(metadata1.getVideo().getDurationSeconds())
                 .filename(metadata1.getFile().getOriginalName())
                 .title(title)
+                .categories(categories)
                 .description(description)
                 .masterplaylist(metadata1.getFile().getName()+"/"+metadata1.getHls().getMasterPlaylist())
                 .resolutions(variants)
