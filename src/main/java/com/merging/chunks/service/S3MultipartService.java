@@ -1,7 +1,9 @@
 package com.merging.chunks.service;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.fasterxml.jackson.databind.DeserializationFeature;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
 import com.merging.chunks.dto.CompletedChunks;
 import com.merging.chunks.dto.UploadIdsDTO;
 import com.merging.chunks.enums.ChunkStatus;
@@ -14,7 +16,10 @@ import com.merging.chunks.model.Video;
 import com.merging.chunks.repo.ChunksRepo;
 import com.merging.chunks.repo.UploadsRepo;
 import com.merging.chunks.repo.VideoRepo;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.transformer.splitter.TextSplitter;
+import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,6 +30,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.*;
+import tools.jackson.databind.ObjectReader;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,14 +51,17 @@ public class S3MultipartService {
     private final UploadsRepo uploadsRepo;
     private final VideoRepo videoRepo;
     private final ApplicationEventPublisher publisher;
-
-    public S3MultipartService(S3Client s3Client, S3Presigner s3Presigner, ChunksRepo chunksRepo, UploadsRepo uploadsRepo, VideoRepo videoRepo, ApplicationEventPublisher publisher) {
+    private final VectorStore vectorStore;
+    private final ObjectMapper objectMapper;
+    public S3MultipartService(S3Client s3Client, S3Presigner s3Presigner, ChunksRepo chunksRepo, UploadsRepo uploadsRepo, VideoRepo videoRepo, ApplicationEventPublisher publisher, VectorStore vectorStore, ObjectMapper objectMapper) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.chunksRepo = chunksRepo;
         this.uploadsRepo = uploadsRepo;
         this.videoRepo = videoRepo;
         this.publisher = publisher;
+        this.vectorStore = vectorStore;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -320,9 +329,12 @@ public class S3MultipartService {
 //    sync meta-data to db
     public ResponseEntity<?> synctodb(MultipartFile thumbnail, MultipartFile metadata, String key, String title, String description, List<String> categories) throws IOException {
         Metadata metadata1 = extractMetadata(metadata);
+        String id = UUID.randomUUID().toString();
+        generateEmbeddings(title, description, categories, id);
         List<String> variants = metadata1.getHls().getVariants().stream().map(Variants::getLabel).toList();
         if (key == null) key = metadata1.getFile().getName()+"/";
         Video videoMetadata = Video.builder()
+                .id(id)
                 .duration(metadata1.getVideo().getDurationSeconds())
                 .filename(metadata1.getFile().getOriginalName())
                 .title(title)
@@ -348,9 +360,30 @@ public class S3MultipartService {
             }
     }
 
-   Metadata extractMetadata(MultipartFile metadata) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-       objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper.readValue(metadata.getInputStream(), Metadata.class);
+    private void generateEmbeddings(String title, String description, List<String> categories, String id) {
+        String content = """
+                Title:%s
+                Description:%s
+                Categories:%s\s
+               \s""".formatted(title, description, String.join(", ",categories));
+        Document document = new Document(content,
+                Map.of(
+                        "video_id",id,
+                        "video_title",title,
+                        "video_categories",categories
+                ));
+        TextSplitter tokenTextSplitter = TokenTextSplitter.builder().build();
+        vectorStore.accept(tokenTextSplitter.apply(List.of(document)));
+
+    }
+
+    Metadata extractMetadata(MultipartFile metadata) throws IOException  {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//       objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        return objectMapper.readValue(metadata.getInputStream(), Metadata.class);
+        ObjectReader reader = objectMapper.readerFor(Metadata.class)
+                .without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        return reader.readValue(metadata.getInputStream());
     }
 }

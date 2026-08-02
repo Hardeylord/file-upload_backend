@@ -5,10 +5,7 @@ import com.merging.chunks.dto.VideoResponse;
 import com.merging.chunks.model.Video;
 import com.merging.chunks.service.VideoService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,6 +26,11 @@ public class VideoController {
     @GetMapping("/video/{id}")
     public ResponseEntity<VideoResponse> video (@PathVariable String id) {
         return ResponseEntity.ok(videoService.videoStream(id));
+    }
+
+    @GetMapping("/video")
+    public ResponseEntity<List<VideoCardDTO>> searchVideo (@RequestParam("search") String search) {
+        return ResponseEntity.ok(videoService.videoSimilaritySearch(search));
     }
 
     @GetMapping("/categories")

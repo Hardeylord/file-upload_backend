@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 public class Video {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     @Column(name = "title")
     private String title;
