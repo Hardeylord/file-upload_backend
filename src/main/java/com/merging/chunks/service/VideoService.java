@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class VideoService {
@@ -61,12 +63,26 @@ public class VideoService {
             doc.getMetadata().get("video_id").toString()
         ).distinct().toList();
 
-        return videoRepo.findAllById(searchResultId).stream()
+//        return videoRepo.findAllById(searchResultId).stream()
+//                .filter(Objects::nonNull)
+//                .map(video-> new VideoCardDTO(
+//                 video.getId(),
+//                 video.getTitle(),
+//                 video.getThumbnail(),
+//                 video.getDuration())).toList();
+
+        Map<String, Video> videos = videoRepo.findAllById(searchResultId).stream()
+                .collect(Collectors.toMap(Video::getId, Function.identity()));
+
+        return searchResultId.stream()
+                .map(videos::get)
                 .filter(Objects::nonNull)
-                .map(video-> new VideoCardDTO(
-                 video.getId(),
-                 video.getTitle(),
-                 video.getThumbnail(),
-                 video.getDuration())).toList();
+                .map(video -> new VideoCardDTO(
+                        video.getId(),
+                        video.getTitle(),
+                        video.getThumbnail(),
+                        video.getDuration()
+                ))
+                .toList();
     }
 }
