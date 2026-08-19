@@ -5,6 +5,7 @@ import com.merging.chunks.dto.UploadIdsDTO;
 import com.merging.chunks.service.DirService;
 import com.merging.chunks.service.S3MultipartService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
+@RequestMapping("/file/")
 public class Controller {
     private final DirService dirService;
     private final S3MultipartService s3MultipartService;
@@ -22,6 +24,12 @@ public class Controller {
     public Controller(DirService dirService, S3MultipartService s3MultipartService) {
         this.dirService = dirService;
         this.s3MultipartService = s3MultipartService;
+    }
+    @GetMapping("/hello")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> hello() {
+        System.out.println("GOT TO ADMIN URL");
+        return ResponseEntity.ok("PRIVATE URL");
     }
 
 //    @GetMapping("/upload")
