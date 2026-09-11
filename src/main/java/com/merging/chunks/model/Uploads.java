@@ -26,6 +26,9 @@ public class Uploads {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private STATUS status;
+    @ManyToOne(fetch =FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private Users users;
 
     @Override
     public final boolean equals(Object o) {

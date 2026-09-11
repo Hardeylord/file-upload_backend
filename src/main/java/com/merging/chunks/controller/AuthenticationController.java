@@ -40,12 +40,12 @@ public class AuthenticationController {
                                             HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
         System.out.println("Checking token....");
-        if (cookies == null) throw new RuntimeException("Session Expired login again to continue");
+        if (cookies == null) throw new RuntimeException("NO SET COOKIES ... LOGIN TO CONTINUE");
         String refreshToken = refreshToken = Arrays.stream(cookies)
                     .filter(cookie -> "refresh_token".equals(cookie.getName()))
                     .map(Cookie::getValue)
                     .findFirst()
-                    .orElseThrow(()-> new RuntimeException("Session Expired login again to continue"));
+                    .orElseThrow(()-> new RuntimeException("NO SET COOKIES...Session Expired login again to continue"));
 
         System.out.println("Found token....");
         System.out.println("Token : "+refreshToken);

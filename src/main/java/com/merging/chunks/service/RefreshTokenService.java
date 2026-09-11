@@ -46,6 +46,7 @@ public class RefreshTokenService {
 //    findByToken and Token Rotation
     public String findByToken(String token, HttpServletResponse response) {
         String refreshToken =hashRefreshTokenString(token);
+        System.out.println(refreshToken);
         RefreshToken refreshTokenRow = refreshTokenRepo.findByTokenHashNotRevoked(refreshToken).orElseThrow(()-> new RuntimeException("INVALID TOKEN"));
 
         if (isExpire(refreshTokenRow)) throw new RuntimeException("TOKEN EXPIRED LOGIN TO CONTINUE");
@@ -62,7 +63,7 @@ public class RefreshTokenService {
                 .secure(true)
                 .maxAge(Duration.of(7, ChronoUnit.DAYS))
                 .path("/")
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
         rotateRefreshToken(refreshTokenRow.getUser(), newToken);

@@ -26,7 +26,9 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
         String errorMessage = resolveErrorMessage(exception);
 
         String redirectUrl = UriComponentsBuilder
-                .fromUriString("http://localhost:5173/registration/login")
+//        https://resumable-file-upload-ui.vercel.app/
+                .fromUriString("https://resumable-file-upload-ui.vercel.app/registration/login")
+//                .fromUriString("http://localhost:5173/registration/login")
                 .queryParam("error", URLEncoder.encode(errorMessage, StandardCharsets.UTF_8))
                 .build()
                 .toUriString();

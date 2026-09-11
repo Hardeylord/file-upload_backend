@@ -2,6 +2,12 @@ package com.merging.chunks.service;
 
 //import com.fasterxml.jackson.databind.DeserializationFeature;
 //import com.fasterxml.jackson.databind.ObjectMapper;
+import com.merging.chunks.dto.MyUserDetails;
+import com.merging.chunks.model.Users;
+import com.merging.chunks.repo.UsersRepo;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.DeserializationFeature;
 import com.merging.chunks.dto.CompletedChunks;
@@ -53,7 +59,8 @@ public class S3MultipartService {
     private final ApplicationEventPublisher publisher;
     private final VectorStore vectorStore;
     private final ObjectMapper objectMapper;
-    public S3MultipartService(S3Client s3Client, S3Presigner s3Presigner, ChunksRepo chunksRepo, UploadsRepo uploadsRepo, VideoRepo videoRepo, ApplicationEventPublisher publisher, VectorStore vectorStore, ObjectMapper objectMapper) {
+    private final UsersRepo usersRepo;
+    public S3MultipartService(S3Client s3Client, S3Presigner s3Presigner, ChunksRepo chunksRepo, UploadsRepo uploadsRepo, VideoRepo videoRepo, ApplicationEventPublisher publisher, VectorStore vectorStore, ObjectMapper objectMapper, UsersRepo usersRepo) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.chunksRepo = chunksRepo;
@@ -62,11 +69,19 @@ public class S3MultipartService {
         this.publisher = publisher;
         this.vectorStore = vectorStore;
         this.objectMapper = objectMapper;
+        this.usersRepo = usersRepo;
     }
 
 
 //    Generate Upload Id
-    public UploadIdsDTO getS3UploadId(String fileName, BigInteger fileSize) {
+    public ResponseEntity<UploadIdsDTO> getS3UploadId(String fileName, BigInteger fileSize) {
+
+        var securityContext = (MyUserDetails) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+        assert securityContext != null;
+        Optional<Users> user = findUser(securityContext.getId());
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new UploadIdsDTO(null, null, true, "USER NOT FOUND, CREATE ACCOUNT OR LOGIN TO CONTINUE"));
+        }
 
         CreateMultipartUploadResponse multiUploadResp = s3Client.createMultipartUpload(
                 CreateMultipartUploadRequest.builder()
@@ -75,19 +90,20 @@ public class S3MultipartService {
                         .build()
         );
         String uid = multiUploadResp.uploadId();
-        UploadIdsDTO ids = new UploadIdsDTO(fileName, uid);
-
-//        ids.setUploadId(uid);
-//        ids.setKey(multiUploadResp.key());
+//        UploadIdsDTO ids = new UploadIdsDTO(fileName, uid);
 
         Uploads fileUpload = new Uploads();
         fileUpload.setUploadId(uid);
         fileUpload.setStatus(STATUS.PROCESSING);
         fileUpload.setFileName(fileName);
         fileUpload.setFileSize(fileSize);
-
+        fileUpload.setUsers(user.get());
         uploadsRepo.save(fileUpload);
-        return ids;
+        return ResponseEntity.ok(new UploadIdsDTO(fileName, uid, false, "UPLOAD ID GENERATED"));
+    }
+
+    private Optional<Users> findUser(UUID id) {
+        return usersRepo.findById(id);
     }
 
 //    Returns Uploaded Chunk based on filename
@@ -216,7 +232,7 @@ public class S3MultipartService {
         long count = chunksRepo.countByUploadId(uploadId);
 
         if (count < totalPartNumber) return;
-        publisher.publishEvent(new UploadIdsDTO(filename, uploadId));
+        publisher.publishEvent(new UploadIdsDTO(filename, uploadId, false, "UPLOAD READY"));
     }
 
 //    Generate Presigned URL
@@ -342,7 +358,7 @@ public class S3MultipartService {
                 .description(description)
                 .masterplaylist(metadata1.getFile().getName()+"/"+metadata1.getHls().getMasterPlaylist())
                 .resolutions(variants)
-                .sizeMB(metadata1.getFile().getSizeMB())
+//                .sizeMB(metadata1.getFile().getSizeMB())
                 .thumbnail(CLOUD_FRONT_URL + key + thumbnail.getOriginalFilename())
                 .build();
         videoRepo.save(videoMetadata);

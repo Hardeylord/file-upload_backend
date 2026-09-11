@@ -53,10 +53,10 @@ public class AuthService {
             ResponseCookie responseCookie = ResponseCookie
                     .from("refresh_token", refresh_token)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(true)
                     .maxAge(Duration.of(7, ChronoUnit.DAYS))
                     .path("/")
-                    .sameSite("Lax")
+                    .sameSite("None")
                     .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
@@ -79,10 +79,10 @@ public class AuthService {
         ResponseCookie responseCookie = ResponseCookie
                 .from("refresh_token", refresh_token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .maxAge(Duration.of(7, ChronoUnit.DAYS))
                 .path("/")
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
         return ApiResponse.ok("LOGIN SUCCESSFUL", access_token);

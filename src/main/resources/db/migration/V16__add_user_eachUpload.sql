@@ -1,0 +1,17 @@
+BEGIN;
+
+ALTER TABLE uploads
+ADD COLUMN user_id UUID DEFAULT NULL;
+
+UPDATE uploads SET user_id='f52516ef-e9fd-48ce-9920-2e673151a1ad' WHERE user_id IS NULL;
+
+ALTER TABLE uploads
+ALTER COLUMN user_id SET NOT NULL;
+
+ALTER TABLE uploads
+ADD CONSTRAINT fk_user_uploads
+FOREIGN KEY (user_id)
+REFERENCES Users(id)
+ON DELETE CASCADE;
+
+COMMIT;

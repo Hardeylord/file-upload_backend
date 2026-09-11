@@ -62,9 +62,8 @@ public class Controller {
     public ResponseEntity<UploadIdsDTO> createUploadId(@RequestParam("filename") String filename,
                                                        @RequestParam("filesize") BigInteger filesize) {
 
-          UploadIdsDTO idsDTO = s3MultipartService.getS3UploadId(filename, filesize);
-        System.out.println(idsDTO.getUploadId());
-        return ResponseEntity.ok().body(idsDTO);
+//        System.out.println(idsDTO.getUploadId());
+        return s3MultipartService.getS3UploadId(filename, filesize);
     }
 
 //    Chunk saving by server

@@ -4,5 +4,7 @@ public enum STATUS {
     PROCESSING,
     COMPLETED,
     COMPLETING,
-    FAILED
+    FAILED,
+    QUEUED,
+    READY
 }

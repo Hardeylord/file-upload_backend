@@ -1,5 +1,6 @@
 package com.merging.chunks.filter;
 
+import com.merging.chunks.service.CustomUserDetailsService;
 import com.merging.chunks.service.JWTService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -11,32 +12,37 @@ import org.apache.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import org.springframework.util.AntPathMatcher;
 import java.io.IOException;
 import java.util.List;
 
 @Component
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTService jwtService;
-
-    public JWTFilter(JWTService jwtService) {
+    private final CustomUserDetailsService userDetailsService;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    public JWTFilter(JWTService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
     }
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/v1/auth/login",
             "/api/v1/auth/signUp",
             "/api/v1/auth/refreshToken",
             "/api/v1/videos",
+            "/api/v1/search",
             "/api/v1/video/*",
             "/api/v1/categories",
-            "/debug/fail"
+            "/debug/fail",
+            "/api/v1/publishStream"
     );
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return PUBLIC_PATHS.stream().anyMatch(path::equals);
+        return PUBLIC_PATHS.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -91,8 +97,9 @@ public class JWTFilter extends OncePerRequestFilter {
                 response.getWriter().write(jsonResponse);
                 return;
             }
+            UserDetails service = userDetailsService.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken uNamePwdAuthTokn =
-                    new UsernamePasswordAuthenticationToken(username
+                    new UsernamePasswordAuthenticationToken(service
                             , null, authority);
 
             SecurityContextHolder.getContext().setAuthentication(uNamePwdAuthTokn);

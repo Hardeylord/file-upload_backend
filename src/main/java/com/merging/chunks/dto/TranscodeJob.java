@@ -3,11 +3,13 @@ package com.merging.chunks.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
-public class UploadIdsDTO {
-    private String key;
+public class TranscodeJob {
+    private String videoId;
+    private String type;
     private String uploadId;
-    private boolean error;
-    private String message;
+    private String input;
 }

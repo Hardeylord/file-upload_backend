@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface UploadsRepo extends JpaRepository<Uploads, String> {
     Uploads findByFileNameAndFileSize(String filename, BigInteger filesize);
@@ -26,10 +27,8 @@ public interface UploadsRepo extends JpaRepository<Uploads, String> {
     @Query("UPDATE Uploads u SET u.status= 'COMPLETING' WHERE u.uploadId = :uploadId AND u.status != 'COMPLETING' ")
     int markCompleting(@Param("uploadId") String uploadId);
 
-    @Modifying
-    @Transactional
-    @Query("UPDATE Uploads u SET u.status= 'COMPLETED' WHERE u.uploadId = :uploadId AND u.status = 'COMPLETING' ")
-    void markCompleted(@Param("uploadId") String uploadId);
+    @Query("SELECT u FROM Uploads u WHERE u.uploadId = :uploadId AND u.status = 'COMPLETED' ")
+    Optional<Uploads> findByStatus(@Param("uploadId") String uploadId);
 
     @Modifying
     @Transactional
@@ -42,4 +41,8 @@ public interface UploadsRepo extends JpaRepository<Uploads, String> {
 //    List<Uploads> getByStatus();
 
     List<Uploads> getAllByStatus(STATUS processing);
+
+//    @Query("SELECT u FROM Uploads u WHERE u.user.id =:userId")
+    @Query(value = "SELECT * FROM uploads WHERE user_id = :userId", nativeQuery = true)
+    List<Uploads> findMyUploads(@Param("userId") UUID userId);
 }

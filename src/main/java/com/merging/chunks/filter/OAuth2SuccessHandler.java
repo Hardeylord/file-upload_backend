@@ -80,13 +80,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         ResponseCookie responseCookie = ResponseCookie
                 .from("refresh_token", RefreshToken)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .maxAge(Duration.of(7, ChronoUnit.DAYS))
                 .path("/")
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
-        response.sendRedirect("http://localhost:5173/lessons/?login=success&type="+JWTToken);
+//        https://resumable-file-upload-ui.vercel.app/
+        response.sendRedirect("https://resumable-file-upload-ui.vercel.app/lessons/?login=success&type="+JWTToken);
+//        response.sendRedirect("http://localhost:5173/lessons/?login=success&type="+JWTToken);
     }
 
     private String generateUniqueUsername(String email) {

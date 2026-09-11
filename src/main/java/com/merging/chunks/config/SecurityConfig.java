@@ -50,9 +50,10 @@ public class SecurityConfig {
                                     "/api/v1/auth/signUp",
                                     "/api/v1/auth/refreshToken",
                                     "/api/v1/videos",
-                                    "/api/v1/video",
+                                    "/api/v1/search",
                                     "/api/v1/video/*",
-                                    "/api/v1/categories")
+                                    "/api/v1/categories",
+                                    "/api/v1/publishStream")
                             .permitAll()
                             .anyRequest().authenticated()
                 )

@@ -6,7 +6,9 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -35,10 +37,15 @@ public class Video {
     @Column(name = "thumbnail")
     private String thumbnail;
     @Column(name = "size")
-    private double sizeMB;
+    private BigInteger sizeMB;
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "resolutions", columnDefinition = "jsonb")
     private List<String> resolutions;
     @Column(name = "categories")
     private List<String> categories;
+    @JoinColumn(name = "upload_id", referencedColumnName = "upload_id")
+    @OneToOne
+    private Uploads uploads;
+    @Column(name = "user_id")
+    private UUID ownerId;
 }
