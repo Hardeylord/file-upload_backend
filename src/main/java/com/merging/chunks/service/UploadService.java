@@ -9,6 +9,10 @@ import com.merging.chunks.model.Video;
 import com.merging.chunks.repo.UploadsRepo;
 import com.merging.chunks.repo.UsersRepo;
 import com.merging.chunks.repo.VideoRepo;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.transformer.splitter.TextSplitter;
+import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -107,6 +111,7 @@ public class UploadService {
             throw new RuntimeException(e);
         }
     }
+
 
     private Optional<Users> findUser(UUID id) {
         return usersRepo.findById(id);

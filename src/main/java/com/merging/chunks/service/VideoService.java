@@ -3,11 +3,12 @@ package com.merging.chunks.service;
 import com.merging.chunks.dto.VideoCardDTO;
 import com.merging.chunks.dto.VideoResponse;
 import com.merging.chunks.model.Video;
+import com.merging.chunks.model.VideoTranscript;
 import com.merging.chunks.repo.VideoRepo;
+import com.merging.chunks.repo.VideoTranscriptRepo;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +23,12 @@ public class VideoService {
 
     private final VideoRepo videoRepo;
     private final VectorStore vectorStore;
+    private final VideoTranscriptRepo transcriptRepo;
 
-    public VideoService(VideoRepo videoRepo, VectorStore vectorStore) {
+    public VideoService(VideoRepo videoRepo, VectorStore vectorStore, VideoTranscriptRepo transcriptRepo) {
         this.videoRepo = videoRepo;
         this.vectorStore = vectorStore;
+        this.transcriptRepo = transcriptRepo;
     }
 
     public ResponseEntity<List<VideoCardDTO>> getAllVideos () {
@@ -36,6 +39,7 @@ public class VideoService {
 
     public VideoResponse videoStream(String id) {
         Video video = videoRepo.findById(id).orElseThrow(()-> new RuntimeException("NO SUCH VIDEO"));
+        List<VideoTranscript> videoTranscripts = transcriptRepo.findAllByVideo(id);
         return new VideoResponse(
                 video.getId(),
                 video.getTitle(),
@@ -43,8 +47,13 @@ public class VideoService {
                 video.getCategories(),
                 CLOUD_FRONT_URL + video.getMasterplaylist(),
                 video.getDuration(),
-                video.getResolutions()
+                video.getResolutions(),
+                videoTranscripts
         );
+    }
+
+    public void videoTranscript(String id) {
+
     }
 
     public List<VideoCardDTO> videoSimilaritySearch(String searchRequest) {
@@ -62,14 +71,6 @@ public class VideoService {
         List<String> searchResultId = relevantChunks.stream().map(doc->
             doc.getMetadata().get("video_id").toString()
         ).distinct().toList();
-
-//        return videoRepo.findAllById(searchResultId).stream()
-//                .filter(Objects::nonNull)
-//                .map(video-> new VideoCardDTO(
-//                 video.getId(),
-//                 video.getTitle(),
-//                 video.getThumbnail(),
-//                 video.getDuration())).toList();
 
         Map<String, Video> videos = videoRepo.findAllById(searchResultId).stream()
                 .collect(Collectors.toMap(Video::getId, Function.identity()));

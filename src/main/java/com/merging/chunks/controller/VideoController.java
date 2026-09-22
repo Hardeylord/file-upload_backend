@@ -47,13 +47,10 @@ public class VideoController {
             @RequestParam(value = "thumbnail", required = false) MultipartFile thumbnail,
             HttpServletRequest request
             ) {
-        System.out.println("VIDEO ID "+videoId);
-        if (!thumbnail.isEmpty()) {
-            System.out.println("USING FILE");
+        if (thumbnail != null && !thumbnail.isEmpty()) {
         return ResponseEntity.ok(uploadService.saveVideo(title, description, categories, videoId, thumbnail, key));
         }
         String thumbnailUrl = request.getParameter("thumbnail");
-        System.out.println("USING URL -> "+thumbnailUrl);
         return ResponseEntity.ok(uploadService.saveVideo(title, description, categories, videoId, thumbnailUrl));
     }
 

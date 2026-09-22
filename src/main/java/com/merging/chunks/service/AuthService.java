@@ -38,7 +38,7 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
     }
 
-    public ApiResponse<String> signUpUser(String password, String email, HttpServletResponse response) {
+    public authTokens signUpUser(String password, String email, HttpServletResponse response) {
         String username =generateUniqueUsername(email);
         Users user = new Users();
         user.setUsername(username);
@@ -60,14 +60,14 @@ public class AuthService {
                     .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
-            return ApiResponse.ok("ACCOUNT CREATED", access_token);
+            return new authTokens(access_token, refresh_token);
         } catch (DataIntegrityViolationException e) {
             log.info("ACCOUNT NOT CREATED 'DUPLICATE USERNAME : ' : {}", username);
             throw new RuntimeException(e);
         }
     }
 
-    public ApiResponse<String> loginUser(String username, String password, HttpServletResponse response) {
+    public authTokens loginUser(String username, String password, HttpServletResponse response) {
         UsernamePasswordAuthenticationToken uNamePwdAuthTokn = new UsernamePasswordAuthenticationToken(username, password);
         Authentication authentication = authManager.authenticate(uNamePwdAuthTokn);
         MyUserDetails userDetails = (MyUserDetails) authentication.getPrincipal();
@@ -85,7 +85,7 @@ public class AuthService {
                 .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
-        return ApiResponse.ok("LOGIN SUCCESSFUL", access_token);
+        return new authTokens(access_token, refresh_token);
     }
 
     private Users findUser(UUID id) {
@@ -100,6 +100,11 @@ public class AuthService {
             candidate = base + suffix++;
         }
         return candidate;
+    }
+
+    public record authTokens(
+            String accessToken,
+            String refreshToken) {
     }
 
 }

@@ -44,9 +44,8 @@ public class RefreshTokenService {
     }
 
 //    findByToken and Token Rotation
-    public String findByToken(String token, HttpServletResponse response) {
+    public authTokens findByToken(String token, HttpServletResponse response) {
         String refreshToken =hashRefreshTokenString(token);
-        System.out.println(refreshToken);
         RefreshToken refreshTokenRow = refreshTokenRepo.findByTokenHashNotRevoked(refreshToken).orElseThrow(()-> new RuntimeException("INVALID TOKEN"));
 
         if (isExpire(refreshTokenRow)) throw new RuntimeException("TOKEN EXPIRED LOGIN TO CONTINUE");
@@ -67,7 +66,7 @@ public class RefreshTokenService {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
         rotateRefreshToken(refreshTokenRow.getUser(), newToken);
-        return access_token;
+        return new authTokens(access_token, newToken);
     }
 
     private void rotateRefreshToken(Users user, String newRfreshToken) {
@@ -110,5 +109,10 @@ public class RefreshTokenService {
                     "SHA-256 algorithm not available", e
             );
         }
+    }
+
+    public record authTokens(
+            String accessToken,
+            String refreshToken) {
     }
 }
